@@ -1,6 +1,7 @@
 import requests
-from bs4 import BeautifulSoup
 import numpy as np
+
+from bs4 import BeautifulSoup
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.naive_bayes import MultinomialNB
@@ -26,9 +27,9 @@ class LanguageRecognizer():
         for j in range(len(langs)):
             texts.append([])
             for i in range(1,data_size+1):
-                url = ("https://github.com/search?p={}&q={}+in%3Apath+extension"
-                      "%3A{}&type=Code").format(str(i),langs[j][0],
-                                                langs[j][1])
+                url = ("https://github.com/search?p={}&q={}+in%3Apath+extension%3A{}&type=Code").format(str(i),
+                                                                                                        langs[j][0],
+                                                                                                        langs[j][1])
                 r = self.session.get(url)
                 
                 soup = BeautifulSoup(r.text,"html.parser")
