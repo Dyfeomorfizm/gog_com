@@ -16,17 +16,16 @@ def create_doc(module):
             name = struct.__name__
             doc += "\n----------------\n"
             doc += name + "\n" + get_first_paragraph(str(struct.__doc__))
-        except:
-            pass
+        except Exception as e:
+            print(e)
     return doc
 
-def w_to_file(filename, doc):
+def to_file(filename, doc):
     with open(filename, 'w') as f:
         f.write(doc)
-        f.close()
 
 def main(module_name, filename):
-    w_to_file(filename, create_doc(do_import(module_name)))
+    to_file(filename, create_doc(do_import(module_name)))
 
 if __name__ == "__main__":
     main(sys.argv[1], sys.argv[2])
