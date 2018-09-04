@@ -19,27 +19,27 @@ class LanguageRecognizer():
                    'password': password,
                    'authenticity_token': auth_token}
         r = self.session.post("https://github.com/session", params=payload)
+        print('Logged In')
 
     def get_data(self, langs=[["python","py"],["java","java"],["cpp","cpp"]],
                  data_size=100):
         self.langs = langs
         texts = []
-        for j in range(len(langs)):
+        for j, lang in enumerate(langs):
             texts.append([])
             for i in range(1,data_size+1):
-                url = ("https://github.com/search?p={}&q={}+in%3Apath+extension%3A{}&type=Code").format(str(i),
-                                                                                                        langs[j][0],
-                                                                                                        langs[j][1])
+                url = ("https://github.com/search?p={}&q={}+in%3Apath+extension%3A{}&type=Code").format(str(i), *lang)
                 r = self.session.get(url)
-                
+                print(r.status_code)
                 soup = BeautifulSoup(r.text,"html.parser")
-                links = soup.select('a[href$=".{}"]'.format(langs[j][1]))
+                links = soup.select('a[href$=".{}"]'.format(lang[1]))
                 links = [link["href"] for link in links[::2]]
                 for link in links:
                     link = link.replace("/blob/","/raw/")
                     r = self.session.get("https://github.com{}".format(link))
                     texts[j].append(r.text)
         self.texts = texts
+        print('Done')
 
     def preprocess_data(self, test_set_size=0.2):
         y = []
@@ -55,6 +55,7 @@ class LanguageRecognizer():
         self.X_test = X[size:]
         self.y_train = y[:size]
         self.y_test = y[size:]
+        print('Done')
 
     def fit(self):
         vectorizer = CountVectorizer()
@@ -74,8 +75,7 @@ class LanguageRecognizer():
         X_test = self.vectorizer.transform(self.X_test)
         X_test = self.tf_transformer.transform(X_test)
         predictions = self.clf.predict(X_test)
-        print("Accuracy score = {}".format(self.calc_acc(predictions,
-                                                         self.y_test)))
+        print("Accuracy score = {}".format(self.calc_acc(predictions, self.y_test)))
 
     def predict(self, filename):
         with open(filename) as f:
@@ -84,4 +84,3 @@ class LanguageRecognizer():
         X_new = self.tf_transformer.transform(X_new)
         predicted = self.clf.predict(X_new)
         print(predicted)
-        
