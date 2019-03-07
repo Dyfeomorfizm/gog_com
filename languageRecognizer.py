@@ -8,12 +8,12 @@ from sklearn.naive_bayes import MultinomialNB
 
 class LanguageRecognizer:
     def __init__(self, clf=MultinomialNB, tf_transformer=TfidfTransformer, vectorizer=CountVectorizer):
-        self.clf = clf
+        self.clf = clf()
         self.lang_tuple = None
         self.session = requests.Session()
         self.text_dict = {}
         self.tf_transformer = tf_transformer(use_idf=False)
-        self.vectorizer = vectorizer
+        self.vectorizer = vectorizer()
         self.X_test = None
         self.X_train = None
         self.y_test = None
@@ -25,12 +25,12 @@ class LanguageRecognizer:
         inputs = soup.find_all("input")
         auth_token = inputs[1]["value"]
         payload = {
-            'login': login,
-            'password': password,
-            'authenticity_token': auth_token,
+            "login": login,
+            "password": password,
+            "authenticity_token": auth_token,
         }
         self.session.post("https://github.com/session", params=payload)
-        print('Logged In')
+        print("Logged In")
 
     def get_raw_from_link(self, link):
         link = link.replace("/blob/", "/raw/")
@@ -50,11 +50,11 @@ class LanguageRecognizer:
                 links = soup.select('a[href$=".{}"]'.format(ext))
                 texts.extend([self.get_raw_from_link(link["href"]) for link in links[::2]])
             self.text_dict[lang] = texts
-        print('Done')
+        print("Done")
 
     def preprocess_data(self, test_set_size=0.2):
-        y = np.array([len(v) * [k] for v, k in self.text_dict.items()])
-        flattened_texts = [text for category in self.text_dict.values() for text in category]
+        y = sum([len(v) * [k] for k, v in self.text_dict.items()], [])
+        flattened_texts = sum(self.text_dict.values(), [])
         labeled_texts = list(zip(flattened_texts, y))
         np.random.shuffle(labeled_texts)
         X, y = zip(*labeled_texts)
@@ -63,10 +63,10 @@ class LanguageRecognizer:
         self.X_test = X[size:]
         self.y_train = y[:size]
         self.y_test = y[size:]
-        print('Done')
+        print("Done")
 
     def fit(self):
-        X_train = self.vectorizer.fit_transform(self.X_train)
+        X_train = self.vectorizer.fit_transform(raw_documents=self.X_train)
         X_train = self.tf_transformer.fit(X_train).transform(X_train)
         self.clf.fit(X_train, self.y_train)
         print("Classifier trained")
